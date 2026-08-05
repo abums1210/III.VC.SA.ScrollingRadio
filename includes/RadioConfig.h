@@ -11,6 +11,9 @@ class RadioConfig {
     int Alpha2ndNonActive;
     int RadioSliderTimeout;
     int RadioSliderAnimSpeed;
+    int OnlyPlayScrollOnPress;
+    int DisableScrollAnim;
+    int CenterIconOnly;
 
     RadioConfig();
 

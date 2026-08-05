@@ -16,6 +16,9 @@ RadioConfig::RadioConfig() {
     Alpha2ndNonActive = 64;   // 32 by default
     RadioSliderTimeout = 4000;
     RadioSliderAnimSpeed = 15;
+    OnlyPlayScrollOnPress = 0;
+    DisableScrollAnim = 0;
+    CenterIconOnly = 0;
 }
 
 bool RadioConfig::Read() {
@@ -34,6 +37,9 @@ bool RadioConfig::Read() {
     Alpha2ndNonActive = cfg.ReadInt("Settings", "Alpha2ndNonActive", Alpha2ndNonActive);
     RadioSliderTimeout = cfg.ReadInt("Settings", "RadioSliderTimeout", RadioSliderTimeout);
     RadioSliderAnimSpeed = cfg.ReadInt("Settings", "RadioSliderAnimSpeed", RadioSliderAnimSpeed);
+    OnlyPlayScrollOnPress = cfg.ReadInt("Settings", "OnlyPlayScrollOnPress", OnlyPlayScrollOnPress);
+    DisableScrollAnim = cfg.ReadInt("Settings", "DisableScrollAnim", DisableScrollAnim);
+    CenterIconOnly = cfg.ReadInt("Settings", "CenterIconOnly", CenterIconOnly);
 
     return true;
 }
@@ -50,6 +56,9 @@ void RadioConfig::Write() {
     cfg.WriteInt("Settings", "Alpha2ndNonActive", Alpha2ndNonActive, "Transparency level of the 2nd non-active icon (0-255)");
     cfg.WriteInt("Settings", "RadioSliderTimeout", RadioSliderTimeout, "Display duration in milliseconds");
     cfg.WriteInt("Settings", "RadioSliderAnimSpeed", RadioSliderAnimSpeed, "Scroll animation speed factor (1-100, where 15 = 0.15)");
+    cfg.WriteInt("Settings", "OnlyPlayScrollOnPress", OnlyPlayScrollOnPress, "Play scroll slide animation only on button press (0 = false, 1 = true)");
+    cfg.WriteInt("Settings", "DisableScrollAnim", DisableScrollAnim, "Disable scroll slide animation entirely (0 = false, 1 = true)");
+    cfg.WriteInt("Settings", "CenterIconOnly", CenterIconOnly, "Display center icon only, hiding side icons (0 = false, 1 = true)");
 
     cfg.Format("; scrolling_radio.ini - Scrolling Radio Configuration\n");
 }

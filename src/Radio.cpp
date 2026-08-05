@@ -25,6 +25,7 @@
 #else
 #include "CAudioEngine.h"
 #include "CAERadioTrackManager.h"
+#include "eVehicleType.h"
 #define RADIO_MANAGER AudioEngine
 #define MUSIC_VOLUME_PREF FrontEndMenuManager.m_nPrefsMusicVolume
 #define ACTIVE_STATIONS 13
@@ -220,6 +221,7 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
     }
 
     static float currentScrollPos = -1.0f;
+    static float hudAlphaMultiplier = 0.0f;
     static int lastStationId = -1;
     static unsigned int displayTimeout = 0;
     static unsigned char savedVolume = 64;
@@ -228,8 +230,12 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
     CVehicle *vehicle;
     CPed *player;
     RadioStation activeStations[ACTIVE_STATIONS];
-    int radioId, isDriving, targetScrollSlot, loopIndex, stationCount;
-    float screenWidth, screenHeight, firstOffset, secondOffset, centerX, centerY, scrollDiff, interpStep, relPos, drawX, drawY, drawAlpha;
+    int radioId, isDriving, targetScrollSlot, loopIndex, stationCount, rawRadioId, currentSlot, targetSlot, offset, stationsListed;
+    float screenWidth, screenHeight, firstOffset, secondOffset, centerX, centerY, scrollDiff, interpStep, relPos, drawX, drawY, drawAlpha, alphaTarget, fadeSpeed;
+    bool isRetuning, isHudActive;
+
+    (void)offset;
+    (void)stationsListed;
 
     vehicle = FindPlayerVehicle();
     player = FindPlayerPed();
@@ -240,11 +246,18 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
         return;
     }
 
+#ifdef GTASA
+    if (vehicle && vehicle->m_nVehicleSubClass == VEHICLE_BMX) {
+        wasDriving = false;
+        return;
+    }
+#endif
+
     stationCount = GetActiveStations(activeStations);
 
     // 1. Resolve raw game radio station ID and map ambient/silence to RADIO_OFF
 #if defined(GTA3) || defined(GTAVC)
-    int rawRadioId = vehicle ? vehicle->m_nRadioStation : 0;
+    rawRadioId = vehicle ? vehicle->m_nRadioStation : 0;
 #ifdef GTA3
     if (rawRadioId == 12 || rawRadioId == 13) {
         rawRadioId = DMAudio.IsMP3RadioChannelAvailable() ? 11 : 10;
@@ -256,10 +269,10 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
 #endif
 
     // 2. Map raw ID to contiguous slot index, apply preview offset, then resolve final radioId
-    int currentSlot = GetScrollIndex(rawRadioId, activeStations, stationCount);
-    int targetSlot = currentSlot;
+    currentSlot = GetScrollIndex(rawRadioId, activeStations, stationCount);
+    targetSlot = currentSlot;
     if (gNumRetunePresses != 0) {
-        int offset = gNumRetunePresses;
+        offset = gNumRetunePresses;
 #ifdef GTAVC
         if (!RADIO_MANAGER.IsMP3RadioChannelAvailable()) {
             if (offset >= 2) {
@@ -307,10 +320,16 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
         AERadioTrackManager.m_bDisplayStationName = false;
     }
 
-    int rawRadioId = vehicle ? RADIO_MANAGER.GetCurrentRadioStationID() : 0;
-    int currentSlot = GetScrollIndex(rawRadioId, activeStations, stationCount);
-    int targetSlot = currentSlot;
-    int stationsListed = AERadioTrackManager.m_nStationsListed;
+    rawRadioId = 13;
+    if (vehicle && AERadioTrackManager.IsVehicleRadioActive()) {
+        char radioType = vehicle->m_vehicleAudio.m_settings.m_nRadioType;
+        if (radioType != RADIO_EMERGENCY && radioType != RADIO_DISABLED) {
+            rawRadioId = RADIO_MANAGER.GetCurrentRadioStationID();
+        }
+    }
+    currentSlot = GetScrollIndex(rawRadioId, activeStations, stationCount);
+    targetSlot = currentSlot;
+    stationsListed = AERadioTrackManager.m_nStationsListed;
     if (stationsListed != 0) {
         targetSlot = currentSlot + stationsListed;
         while (targetSlot < 0) targetSlot += stationCount;
@@ -345,6 +364,17 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
         currentScrollPos = (float)targetScrollSlot;
     }
 
+    isRetuning = false;
+#if defined(GTA3) || defined(GTAVC)
+    isRetuning = (gNumRetunePresses != 0);
+#else
+    isRetuning = (stationsListed != 0);
+#endif
+
+    if (config.DisableScrollAnim || (config.OnlyPlayScrollOnPress && !isRetuning)) {
+        currentScrollPos = (float)targetScrollSlot;
+    }
+
     scrollDiff = (float)targetScrollSlot - currentScrollPos;
     while (scrollDiff < -((float)stationCount / 2.0f)) {
         scrollDiff += (float)stationCount;
@@ -369,8 +399,24 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
         currentScrollPos = (float)targetScrollSlot;
     }
 
-    // Only render the icons if we are within the display timeout
-    if ((unsigned int)CTimer::m_snTimeInMilliseconds <= displayTimeout) {
+    // Fade In / Fade Out animation handling
+    isHudActive = ((unsigned int)CTimer::m_snTimeInMilliseconds <= displayTimeout);
+    alphaTarget = isHudActive ? 1.0f : 0.0f;
+    fadeSpeed = 0.08f * CTimer::ms_fTimeStep;
+    if (hudAlphaMultiplier < alphaTarget) {
+        hudAlphaMultiplier += fadeSpeed;
+        if (hudAlphaMultiplier > alphaTarget) {
+            hudAlphaMultiplier = alphaTarget;
+        }
+    } else if (hudAlphaMultiplier > alphaTarget) {
+        hudAlphaMultiplier -= fadeSpeed;
+        if (hudAlphaMultiplier < alphaTarget) {
+            hudAlphaMultiplier = alphaTarget;
+        }
+    }
+
+    // Render the icons if the HUD is visible (alpha > 0.0f)
+    if (hudAlphaMultiplier > 0.0f) {
         screenHeight = screen::GetScreenMaxY();
         screenWidth = screen::GetScreenMaxX();
         
@@ -394,6 +440,10 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
                 relPos -= (float)stationCount;
             }
 
+            if (config.CenterIconOnly && fabs(relPos) > 0.99f) {
+                continue;
+            }
+
             if (fabs(relPos) <= 2.5f) {
                 drawX = centerX + relPos * firstOffset;
                 drawY = centerY;
@@ -407,6 +457,7 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
                     drawAlpha = (float)config.Alpha2ndNonActive - (fabs(relPos) - 2.0f) * 2.0f * (float)config.Alpha2ndNonActive;
                 }
 
+                drawAlpha *= hudAlphaMultiplier;
                 DrawIcon(loopIndex, drawX, drawY, drawAlpha, relPos, activeStations);
             }
         }
