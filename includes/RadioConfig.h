@@ -14,6 +14,7 @@ class RadioConfig {
     int OnlyPlayScrollOnPress;
     int DisableScrollAnim;
     int CenterIconOnly;
+    int EnableBicycleRadioIcon;
 
     RadioConfig();
 

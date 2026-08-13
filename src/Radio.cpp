@@ -36,31 +36,32 @@ using namespace plugin;
 RwTexDictionary *Radio::radioTexDict = nullptr;
 
 #ifdef GTA3
-CSprite2d Radio::radioIcons[21];
+CSprite2d Radio::radioIcons[22];
 #elif defined(GTAVC)
-CSprite2d Radio::radioIcons[23];
+CSprite2d Radio::radioIcons[24];
 int32_t& gNumRetunePresses = *(int32_t *)0x783998;
 #else
-CSprite2d Radio::radioIcons[25];
+CSprite2d Radio::radioIcons[26];
 #endif
 
-const char *Radio::radioIconNamesIII[21] = {
+const char *Radio::radioIconNamesIII[22] = {
     "chatterbox", "chatterbox_gray", "doublecleff", "doublecleff_gray",
     "flashback",  "flashback_gray",  "gameradio",   "gameradio_gray",
     "headradio",  "headradio_gray",  "kjah",        "kjah_gray",
     "lips",       "lips_gray",       "mp3player",   "mp3player_gray",
-    "msx",        "msx_gray",        "off_button",  "rise",
-    "rise_gray"
+    "msx",        "msx_gray",        "off_button",  "off_button_gray",
+    "rise",       "rise_gray"
 };
 
-const char *Radio::radioIconNamesVC[23] = {
+const char *Radio::radioIconNamesVC[24] = {
     "810vcn",     "810vcn_gray", "emotion",      "emotion_gray", "espantoso",     "espantoso_gray",
     "fever",      "fever_gray",  "flash",        "flash_gray",   "kchat",         "kchat_gray",
-    "mp3",        "mp3_gray",    "off_button",   "vcpr",         "vcpr_gray",     "vrock",
-    "vrock_gray", "wave103",     "wave103_gray", "wildstyle",    "wildstyle_gray"
+    "mp3",        "mp3_gray",    "off_button",   "off_button_gray", "vcpr",       "vcpr_gray",
+    "vrock",      "vrock_gray",  "wave103",      "wave103_gray", "wildstyle",     "wildstyle_gray"
 };
 
-const char *Radio::radioIconNamesSA[25] = {"off_button",
+const char *Radio::radioIconNamesSA[26] = {"off_button",
+                                           "off_button_gray",
                                            "radio_bounce",
                                            "radio_bounce_gray",
                                            "radio_csr",
@@ -94,7 +95,7 @@ static int GetActiveStations(RadioStation *outStations) {
     outStations[count++] = { 0, 8, 9 };    // HEAD_RADIO -> headradio
     outStations[count++] = { 1, 2, 3 };    // DOUBLE_CLEF_FM -> doublecleff
     outStations[count++] = { 2, 10, 11 };  // JAH_RADIO -> kjah
-    outStations[count++] = { 3, 19, 20 };  // RISE_FM -> rise
+    outStations[count++] = { 3, 20, 21 };  // RISE_FM -> rise
     outStations[count++] = { 4, 12, 13 };  // LIPS_106 -> lips
     outStations[count++] = { 5, 6, 7 };    // GAME_FM -> gameradio
     outStations[count++] = { 6, 16, 17 };  // MSX_FM -> msx
@@ -102,40 +103,40 @@ static int GetActiveStations(RadioStation *outStations) {
     outStations[count++] = { 8, 0, 1 };    // CHATTERBOX_109 -> chatterbox
     if (DMAudio.IsMP3RadioChannelAvailable()) {
         outStations[count++] = { 9, 14, 15 };  // MP3_PLAEYR -> mp3player
-        outStations[count++] = { 11, 18, -1 }; // RADIO_OFF -> off_button
+        outStations[count++] = { 11, 18, 19 }; // RADIO_OFF -> off_button
     } else {
-        outStations[count++] = { 10, 18, -1 }; // RADIO_OFF -> off_button
+        outStations[count++] = { 10, 18, 19 }; // RADIO_OFF -> off_button
     }
 #elif defined(GTAVC)
-    outStations[count++] = { 0, 21, 22 };  // WILDSTYLE
+    outStations[count++] = { 0, 22, 23 };  // WILDSTYLE
     outStations[count++] = { 1, 8, 9 };    // FLASH_FM
     outStations[count++] = { 2, 10, 11 };  // KCHAT
     outStations[count++] = { 3, 6, 7 };    // FEVER
-    outStations[count++] = { 4, 17, 18 };  // V_ROCK
-    outStations[count++] = { 5, 15, 16 };  // VCPR
+    outStations[count++] = { 4, 18, 19 };  // V_ROCK
+    outStations[count++] = { 5, 16, 17 };  // VCPR
     outStations[count++] = { 6, 4, 5 };    // RADIO_ESPANTOSO
     outStations[count++] = { 7, 2, 3 };    // EMOTION
-    outStations[count++] = { 8, 19, 20 };  // WAVE
+    outStations[count++] = { 8, 20, 21 };  // WAVE
     if (RADIO_MANAGER.IsMP3RadioChannelAvailable()) {
         outStations[count++] = { 9, 12, 13 };  // MP3
-        outStations[count++] = { 10, 14, -1 }; // RADIO_OFF (10)
+        outStations[count++] = { 10, 14, 15 }; // RADIO_OFF (10)
     } else {
-        outStations[count++] = { 9, 14, -1 };  // RADIO_OFF (9)
+        outStations[count++] = { 9, 14, 15 };  // RADIO_OFF (9)
     }
 #else
-    outStations[count++] = {13, 0, -1}; // RADIO_OFF (13 is RADIO_NONE)
-    outStations[count++] = {1, 13, 14}; // PLAYBACK
-    outStations[count++] = {2, 9, 10};   // K_ROSE
-    outStations[count++] = {3, 5, 6};    // K_DST
-    outStations[count++] = {4, 1, 2};    // BOUNCE
-    outStations[count++] = {5, 19, 20};  // SF_UR
-    outStations[count++] = {6, 17, 18};  // RADIO_LOS_SANTOS
-    outStations[count++] = {7, 15, 16};  // RADIO_X 
-    outStations[count++] = {8, 3, 4};    // CSR 
-    outStations[count++] = {9, 7, 8};    // JAH_RADIO
-    outStations[count++] = {10, 11, 12};  // MASTERSOUNDS 
-    outStations[count++] = {11, 23, 24};  // WCTR
-    outStations[count++] = {12, 21, 22}; // MP3 
+    outStations[count++] = {13, 0, 1};  // RADIO_OFF (13 is RADIO_NONE)
+    outStations[count++] = {1, 14, 15};  // PLAYBACK
+    outStations[count++] = {2, 10, 11};  // K_ROSE
+    outStations[count++] = {3, 6, 7};    // K_DST
+    outStations[count++] = {4, 2, 3};    // BOUNCE
+    outStations[count++] = {5, 20, 21};  // SF_UR
+    outStations[count++] = {6, 18, 19};  // RADIO_LOS_SANTOS
+    outStations[count++] = {7, 16, 17};  // RADIO_X 
+    outStations[count++] = {8, 4, 5};    // CSR 
+    outStations[count++] = {9, 8, 9};    // JAH_RADIO
+    outStations[count++] = {10, 12, 13}; // MASTERSOUNDS 
+    outStations[count++] = {11, 24, 25}; // WCTR
+    outStations[count++] = {12, 22, 23}; // MP3 
 #endif
     return count;
 }
@@ -199,17 +200,17 @@ void Radio::InitRadio() {
     int i;
 #ifdef GTA3
     radioTexDict = CFileLoader::LoadTexDictionary(GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\radio_iii.txd"));
-    for (i = 0; i < 21; ++i) {
+    for (i = 0; i < 22; ++i) {
         radioIcons[i].m_pTexture = RwTexDictionaryFindNamedTexture(radioTexDict, radioIconNamesIII[i]);
     }
 #elif defined(GTAVC)
     radioTexDict = CFileLoader::LoadTexDictionary(GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\radio_vc.txd"));
-    for (i = 0; i < 23; ++i) {
+    for (i = 0; i < 24; ++i) {
         radioIcons[i].m_pTexture = RwTexDictionaryFindNamedTexture(radioTexDict, radioIconNamesVC[i]);
     }
 #else
     radioTexDict = CFileLoader::LoadTexDictionary(GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\radio_sa.txd"));
-    for (i = 0; i < 25; ++i) {
+    for (i = 0; i < 26; ++i) {
         radioIcons[i].m_pTexture = RwTexDictionaryFindNamedTexture(radioTexDict, radioIconNamesSA[i]);
     }
 #endif
@@ -247,7 +248,7 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
     }
 
 #ifdef GTASA
-    if (vehicle && vehicle->m_nVehicleSubClass == VEHICLE_BMX) {
+    if (!config.EnableBicycleRadioIcon && vehicle && vehicle->m_nVehicleSubClass == VEHICLE_BMX) {
         wasDriving = false;
         return;
     }

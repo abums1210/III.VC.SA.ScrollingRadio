@@ -19,6 +19,7 @@ RadioConfig::RadioConfig() {
     OnlyPlayScrollOnPress = 0;
     DisableScrollAnim = 0;
     CenterIconOnly = 0;
+    EnableBicycleRadioIcon = 0;
 }
 
 bool RadioConfig::Read() {
@@ -40,6 +41,7 @@ bool RadioConfig::Read() {
     OnlyPlayScrollOnPress = cfg.ReadInt("Settings", "OnlyPlayScrollOnPress", OnlyPlayScrollOnPress);
     DisableScrollAnim = cfg.ReadInt("Settings", "DisableScrollAnim", DisableScrollAnim);
     CenterIconOnly = cfg.ReadInt("Settings", "CenterIconOnly", CenterIconOnly);
+    EnableBicycleRadioIcon = cfg.ReadInt("Settings", "EnableBicycleRadioIcon", EnableBicycleRadioIcon);
 
     return true;
 }
@@ -59,6 +61,7 @@ void RadioConfig::Write() {
     cfg.WriteInt("Settings", "OnlyPlayScrollOnPress", OnlyPlayScrollOnPress, "Play scroll slide animation only on button press (0 = false, 1 = true)");
     cfg.WriteInt("Settings", "DisableScrollAnim", DisableScrollAnim, "Disable scroll slide animation entirely (0 = false, 1 = true)");
     cfg.WriteInt("Settings", "CenterIconOnly", CenterIconOnly, "Display center icon only, hiding side icons (0 = false, 1 = true)");
+    cfg.WriteInt("Settings", "EnableBicycleRadioIcon", EnableBicycleRadioIcon, "Enable radio display on bicycles in SA (0 = false, 1 = true)");
 
     cfg.Format("; scrolling_radio.ini - Scrolling Radio Configuration\n");
 }
