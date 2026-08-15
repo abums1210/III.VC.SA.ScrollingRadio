@@ -225,6 +225,7 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
     static float hudAlphaMultiplier = 0.0f;
     static int lastStationId = -1;
     static unsigned int displayTimeout = 0;
+    static unsigned int enteringVehicleTime = 0;
     static unsigned char savedVolume = 64;
     static bool isMuted = false;
     static bool wasDriving = false;
@@ -233,7 +234,7 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
     RadioStation activeStations[ACTIVE_STATIONS];
     int radioId, isDriving, targetScrollSlot, loopIndex, stationCount, rawRadioId, currentSlot, targetSlot, offset, stationsListed;
     float screenWidth, screenHeight, firstOffset, secondOffset, centerX, centerY, scrollDiff, interpStep, relPos, drawX, drawY, drawAlpha, alphaTarget, fadeSpeed;
-    bool isRetuning, isHudActive;
+    bool isRetuning, isHudActive, isExiting;
 
     (void)offset;
     (void)stationsListed;
@@ -242,14 +243,23 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
     player = FindPlayerPed();
     isDriving = player ? (player->m_ePedState == PEDSTATE_DRIVING) : 0;
 
-    if (!isDriving) {
+    isExiting = false;
+    if (player && (player->m_ePedState == PEDSTATE_EXIT_CAR || CPad::GetPad(0)->GetExitVehicle())) {
+        isExiting = true;
+    }
+
+    if (!isDriving || isExiting) {
         wasDriving = false;
+        displayTimeout = 0;
+        hudAlphaMultiplier = 0.0f;
         return;
     }
 
 #ifdef GTASA
     if (!config.EnableBicycleRadioIcon && vehicle && vehicle->m_nVehicleSubClass == VEHICLE_BMX) {
         wasDriving = false;
+        displayTimeout = 0;
+        hudAlphaMultiplier = 0.0f;
         return;
     }
 #endif
@@ -353,10 +363,19 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
 #endif
 
     // Auto-update display timeout if radio station changes or player just entered a car
-    if (!wasDriving || radioId != lastStationId) {
-        displayTimeout = CTimer::m_snTimeInMilliseconds + config.RadioSliderTimeout;
+    if (!wasDriving) {
+        enteringVehicleTime = CTimer::m_snTimeInMilliseconds;
+        if (!config.DisableIconDisplayWhileEntering) {
+            displayTimeout = CTimer::m_snTimeInMilliseconds + config.RadioSliderTimeout;
+        }
         lastStationId = radioId;
         wasDriving = true;
+    } else if (radioId != lastStationId) {
+        bool blockTrigger = config.DisableIconDisplayWhileEntering && (CTimer::m_snTimeInMilliseconds - enteringVehicleTime < 1500);
+        if (!blockTrigger) {
+            displayTimeout = CTimer::m_snTimeInMilliseconds + config.RadioSliderTimeout;
+        }
+        lastStationId = radioId;
     }
 
     // Keep scrolling animation running even if HUD is not shown to keep it in sync
@@ -469,15 +488,15 @@ void Radio::ShutdownRadio() {
     int i;
     if (radioTexDict) {
 #ifdef GTA3
-        for (i = 0; i < 21; ++i) {
+        for (i = 0; i < 22; ++i) {
             radioIcons[i].m_pTexture = nullptr;
         }
 #elif defined(GTAVC)
-        for (i = 0; i < 23; ++i) {
+        for (i = 0; i < 24; ++i) {
             radioIcons[i].m_pTexture = nullptr;
         }
 #else
-        for (i = 0; i < 25; ++i) {
+        for (i = 0; i < 26; ++i) {
             radioIcons[i].m_pTexture = nullptr;
         }
 #endif

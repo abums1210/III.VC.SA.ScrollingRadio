@@ -20,6 +20,7 @@ RadioConfig::RadioConfig() {
     DisableScrollAnim = 0;
     CenterIconOnly = 0;
     EnableBicycleRadioIcon = 0;
+    DisableIconDisplayWhileEntering = 0;
 }
 
 bool RadioConfig::Read() {
@@ -42,6 +43,7 @@ bool RadioConfig::Read() {
     DisableScrollAnim = cfg.ReadInt("Settings", "DisableScrollAnim", DisableScrollAnim);
     CenterIconOnly = cfg.ReadInt("Settings", "CenterIconOnly", CenterIconOnly);
     EnableBicycleRadioIcon = cfg.ReadInt("Settings", "EnableBicycleRadioIcon", EnableBicycleRadioIcon);
+    DisableIconDisplayWhileEntering = cfg.ReadInt("Settings", "DisableIconDisplayWhileEntering", DisableIconDisplayWhileEntering);
 
     return true;
 }
@@ -62,6 +64,7 @@ void RadioConfig::Write() {
     cfg.WriteInt("Settings", "DisableScrollAnim", DisableScrollAnim, "Disable scroll slide animation entirely (0 = false, 1 = true)");
     cfg.WriteInt("Settings", "CenterIconOnly", CenterIconOnly, "Display center icon only, hiding side icons (0 = false, 1 = true)");
     cfg.WriteInt("Settings", "EnableBicycleRadioIcon", EnableBicycleRadioIcon, "Enable radio display on bicycles in SA (0 = false, 1 = true)");
+    cfg.WriteInt("Settings", "DisableIconDisplayWhileEntering", DisableIconDisplayWhileEntering, "Disable radio icons display when entering a vehicle (0 = false, 1 = true)");
 
     cfg.Format("; scrolling_radio.ini - Scrolling Radio Configuration\n");
 }
