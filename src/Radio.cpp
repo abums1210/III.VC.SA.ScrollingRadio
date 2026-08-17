@@ -85,7 +85,33 @@ const char *Radio::radioIconNamesSA[26] = {"off_button",
                                            "radio_TPLAYER",
                                            "radio_TPLAYER_gray",
                                            "radio_WCTR",
-                                           "radio_WCTR_gray"}; 
+                                           "radio_WCTR_gray"};
+
+#ifdef GTASA
+static bool IsEmergencyOrDisabledVehicle(CVehicle *vehicle) {
+    if (!vehicle) {
+        return false;
+    }
+    char radioType = vehicle->m_vehicleAudio.m_settings.m_nRadioType;
+    if (radioType == RADIO_EMERGENCY || radioType == RADIO_DISABLED) {
+        return true;
+    }
+    return false;
+}
+#endif
+
+static bool IsPedExitingCar(CPed *player) {
+    if (!player) {
+        return false;
+    }
+    if (player->m_ePedState == PEDSTATE_EXIT_CAR) {
+        return true;
+    }
+    if (CPad::GetPad(0)->GetExitVehicle()) {
+        return true;
+    }
+    return false;
+}
 
 static int GetActiveStations(RadioStation *outStations) {
     int count;
@@ -242,11 +268,7 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
     vehicle = FindPlayerVehicle();
     player = FindPlayerPed();
     isDriving = player ? (player->m_ePedState == PEDSTATE_DRIVING) : 0;
-
-    isExiting = false;
-    if (player && (player->m_ePedState == PEDSTATE_EXIT_CAR || CPad::GetPad(0)->GetExitVehicle())) {
-        isExiting = true;
-    }
+    isExiting = IsPedExitingCar(player);
 
     if (!isDriving || isExiting) {
         wasDriving = false;
@@ -333,8 +355,7 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
 
     rawRadioId = 13;
     if (vehicle && AERadioTrackManager.IsVehicleRadioActive()) {
-        char radioType = vehicle->m_vehicleAudio.m_settings.m_nRadioType;
-        if (radioType != RADIO_EMERGENCY && radioType != RADIO_DISABLED) {
+        if (!IsEmergencyOrDisabledVehicle(vehicle)) {
             rawRadioId = RADIO_MANAGER.GetCurrentRadioStationID();
         }
     }
