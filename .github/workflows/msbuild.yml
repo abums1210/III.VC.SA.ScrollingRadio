@@ -25,7 +25,7 @@ jobs:
     - name: Checkout Plugin-SDK
       uses: actions/checkout@v6
       with:
-        repository: 'DK22Pac/plugin-sdk'
+        repository: 'abums1210/plugin-sdk'
         path: 'plugin-sdk'
         submodules: recursive
 
@@ -42,16 +42,19 @@ jobs:
         call "tools\generate\Visual Studio.bat"
         echo ::groupEnd::
         
+        set "SLN_FILE=plugin.sln"
+        if exist "plugin.slnx" set "SLN_FILE=plugin.slnx"
+
         echo ::group::Build SDK GTA III static lib
-        msbuild plugin.sln /property:Configuration=Release /property:Platform="Mixed Platforms" /target:plugin_iii /m /verbosity:minimal
+        msbuild %SLN_FILE% /property:Configuration=Release /property:Platform="Mixed Platforms" /target:plugin_iii /m /verbosity:minimal
         echo ::groupEnd::
         
         echo ::group::Build SDK GTA VC static lib
-        msbuild plugin.sln /property:Configuration=Release /property:Platform="Mixed Platforms" /target:plugin_vc /m /verbosity:minimal
+        msbuild %SLN_FILE% /property:Configuration=Release /property:Platform="Mixed Platforms" /target:plugin_vc /m /verbosity:minimal
         echo ::groupEnd::
 
         echo ::group::Build SDK GTA SA static lib
-        msbuild plugin.sln /property:Configuration=Release /property:Platform="Mixed Platforms" /target:plugin_sa /m /verbosity:minimal
+        msbuild %SLN_FILE% /property:Configuration=Release /property:Platform="Mixed Platforms" /target:plugin_sa /m /verbosity:minimal
         echo ::groupEnd::
 
     - name: Set Environment Variables & Create Mock Folders
