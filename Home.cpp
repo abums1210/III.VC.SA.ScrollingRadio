@@ -3,9 +3,6 @@
 #include "includes/RadioConfig.h"
 #include "includes/InputHandler.h"
 #include <plugin.h>
-#include "CHud.h"
-#include "CCamera.h"
-#include "CReplay.h"
 
 using namespace plugin;
 
@@ -20,9 +17,6 @@ static void OnGameProcess() {
     if (config.ReloadKey > 0 && InputHandler::IsKeyJustPressed(config.ReloadKey)) {
         config.Read();
     }
-}
-
-static void OnDrawHud() {
 }
 
 static void OnShutdownRw() {
@@ -41,7 +35,7 @@ class Home {
 #endif
         Events::initRwEvent += OnInitRw;
         Events::gameProcessEvent += OnGameProcess;
-        Events::drawHudEvent += OnDrawHud;
         Events::shutdownRwEvent += OnShutdownRw;
     }
 } home;
+

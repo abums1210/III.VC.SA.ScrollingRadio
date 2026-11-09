@@ -7,12 +7,13 @@
 #include "CFileLoader.h"
 #include "CMenuManager.h"
 #include "CPad.h"
+#ifndef GTASA
 #include "CCamera.h"
+#endif
 #include "CReplay.h"
 
 #ifdef GTA3
 #include "cDMAudio.h"
-#include "cMusicManager.h"
 #include "eRadioStations.h"
 #define RADIO_MANAGER gMusicManager
 #define MUSIC_VOLUME_PREF CMenuManager::m_nPrefsMusicVolume
@@ -37,13 +38,16 @@ RwTexDictionary *Radio::radioTexDict = nullptr;
 
 #ifdef GTA3
 CSprite2d Radio::radioIcons[22];
+int32_t& gNumRetunePresses = *(int32_t *)0x650B80;
 #elif defined(GTAVC)
 CSprite2d Radio::radioIcons[24];
 int32_t& gNumRetunePresses = *(int32_t *)0x783998;
 #else
 CSprite2d Radio::radioIcons[26];
+bool& m_bWidescreenOn = *(bool *)0xB6F065;
 #endif
 
+#ifdef GTA3
 const char *Radio::radioIconNamesIII[22] = {
     "chatterbox", "chatterbox_gray", "doublecleff", "doublecleff_gray",
     "flashback",  "flashback_gray",  "gameradio",   "gameradio_gray",
@@ -52,14 +56,14 @@ const char *Radio::radioIconNamesIII[22] = {
     "msx",        "msx_gray",        "off_button",  "off_button_gray",
     "rise",       "rise_gray"
 };
-
+#elif defined(GTAVC)
 const char *Radio::radioIconNamesVC[24] = {
     "810vcn",     "810vcn_gray", "emotion",      "emotion_gray", "espantoso",     "espantoso_gray",
     "fever",      "fever_gray",  "flash",        "flash_gray",   "kchat",         "kchat_gray",
     "mp3",        "mp3_gray",    "off_button",   "off_button_gray", "vcpr",       "vcpr_gray",
     "vrock",      "vrock_gray",  "wave103",      "wave103_gray", "wildstyle",     "wildstyle_gray"
 };
-
+#else
 const char *Radio::radioIconNamesSA[26] = {"off_button",
                                            "off_button_gray",
                                            "radio_bounce",
@@ -86,6 +90,7 @@ const char *Radio::radioIconNamesSA[26] = {"off_button",
                                            "radio_TPLAYER_gray",
                                            "radio_WCTR",
                                            "radio_WCTR_gray"};
+#endif
 
 #ifdef GTASA
 static bool IsEmergencyOrDisabledVehicle(CVehicle *vehicle) {
@@ -243,7 +248,11 @@ void Radio::InitRadio() {
 }
 
 void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
+#ifdef GTASA
+    if (CTimer::m_UserPause || CTimer::m_CodePause || m_bWidescreenOn || CReplay::Mode) {
+#else
     if (CTimer::m_UserPause || CTimer::m_CodePause || TheCamera.m_bWideScreenOn || CReplay::Mode) {
+#endif
         return;
     }
 

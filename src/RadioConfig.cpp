@@ -1,6 +1,5 @@
 #include "../includes/RadioConfig.h"
 #include <cstdlib>
-#include <fstream>
 #include <string>
 
 #define RADIO_CONFIG_INI_PATH GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\scrolling_radio.ini")
