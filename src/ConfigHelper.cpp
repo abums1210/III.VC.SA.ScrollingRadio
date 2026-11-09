@@ -5,8 +5,17 @@
 ConfigHelper::ConfigHelper(const std::string& iniPath) : path(iniPath) {}
 
 bool ConfigHelper::Exists() {
-    DWORD attr = GetFileAttributesA(path.c_str());
+    DWORD attr;
+    attr = GetFileAttributesA(path.c_str());
     return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void ConfigHelper::StoreComment(const char* sec, const char* key, const char* comment) {
+    std::string mapKey;
+
+    if (!comment || comment[0] == '\0') return;
+    mapKey = std::string(sec) + "|" + key;
+    comments[mapKey] = comment;
 }
 
 int ConfigHelper::ReadInt(const char* sec, const char* key, int def) {
@@ -23,8 +32,11 @@ float ConfigHelper::ReadFloat(const char* sec, const char* key, float def) {
 
 CVector2D ConfigHelper::ReadVec(const char* sec, const char* key, CVector2D def) {
     char buf[128];
+    float x, y;
+
     if (GetPrivateProfileStringA(sec, key, "", buf, sizeof(buf), path.c_str()) > 0) {
-        float x = 0.0f, y = 0.0f;
+        x = 0.0f;
+        y = 0.0f;
         if (sscanf_s(buf, "%f %f", &x, &y) == 2) {
             return CVector2D(x, y);
         }
@@ -34,8 +46,13 @@ CVector2D ConfigHelper::ReadVec(const char* sec, const char* key, CVector2D def)
 
 CRect ConfigHelper::ReadRect(const char* sec, const char* key, CRect def) {
     char buf[256];
+    float left, top, right, bottom;
+
     if (GetPrivateProfileStringA(sec, key, "", buf, sizeof(buf), path.c_str()) > 0) {
-        float left = 0.0f, top = 0.0f, right = 0.0f, bottom = 0.0f;
+        left = 0.0f;
+        top = 0.0f;
+        right = 0.0f;
+        bottom = 0.0f;
         if (sscanf_s(buf, "%f %f %f %f", &left, &top, &right, &bottom) == 4) {
             return CRect(left, top, right, bottom);
         }
@@ -45,8 +62,13 @@ CRect ConfigHelper::ReadRect(const char* sec, const char* key, CRect def) {
 
 CRGBA ConfigHelper::ReadRGBA(const char* sec, const char* key, CRGBA def) {
     char buf[128];
+    int r, g, b, a;
+
     if (GetPrivateProfileStringA(sec, key, "", buf, sizeof(buf), path.c_str()) > 0) {
-        int r = 0, g = 0, b = 0, a = 255;
+        r = 0;
+        g = 0;
+        b = 0;
+        a = 255;
         if (sscanf_s(buf, "%d %d %d %d", &r, &g, &b, &a) >= 3) {
             return CRGBA(r, g, b, a);
         }
@@ -74,71 +96,54 @@ std::string ConfigHelper::ReadString(const char* sec, const char* key, const std
 }
 
 void ConfigHelper::WriteInt(const char* sec, const char* key, int val, const char* comment) {
-    char buf[128];
-    if (comment && comment[0] != '\0') {
-        sprintf_s(buf, "%d #%s", val, comment);
-    } else {
-        sprintf_s(buf, "%d", val);
-    }
+    char buf[512];
+    StoreComment(sec, key, comment);
+    sprintf_s(buf, "%d", val);
     WritePrivateProfileStringA(sec, key, buf, path.c_str());
 }
 
 void ConfigHelper::WriteFloat(const char* sec, const char* key, float val, const char* comment) {
-    char buf[128];
-    if (comment && comment[0] != '\0') {
-        sprintf_s(buf, "%.2f #%s", val, comment);
-    } else {
-        sprintf_s(buf, "%.2f", val);
-    }
+    char buf[512];
+    StoreComment(sec, key, comment);
+    sprintf_s(buf, "%.2f", val);
     WritePrivateProfileStringA(sec, key, buf, path.c_str());
 }
 
 void ConfigHelper::WriteVec(const char* sec, const char* key, CVector2D val, const char* comment) {
-    char buf[128];
-    if (comment && comment[0] != '\0') {
-        sprintf_s(buf, "%.2f %.2f #%s", val.x, val.y, comment);
-    } else {
-        sprintf_s(buf, "%.2f %.2f", val.x, val.y);
-    }
+    char buf[512];
+    StoreComment(sec, key, comment);
+    sprintf_s(buf, "%.2f %.2f", val.x, val.y);
     WritePrivateProfileStringA(sec, key, buf, path.c_str());
 }
 
 void ConfigHelper::WriteRect(const char* sec, const char* key, CRect val, const char* comment) {
-    char buf[256];
-    if (comment && comment[0] != '\0') {
-        sprintf_s(buf, "%.2f %.2f %.2f %.2f #%s", val.left, val.top, val.right, val.bottom, comment);
-    } else {
-        sprintf_s(buf, "%.2f %.2f %.2f %.2f", val.left, val.top, val.right, val.bottom);
-    }
+    char buf[512];
+    StoreComment(sec, key, comment);
+    sprintf_s(buf, "%.2f %.2f %.2f %.2f", val.left, val.top, val.right, val.bottom);
     WritePrivateProfileStringA(sec, key, buf, path.c_str());
 }
 
 void ConfigHelper::WriteRGBA(const char* sec, const char* key, CRGBA val, const char* comment) {
-    char buf[256];
-    if (comment && comment[0] != '\0') {
-        sprintf_s(buf, "%d %d %d %d #%s", val.r, val.g, val.b, val.a, comment);
-    } else {
-        sprintf_s(buf, "%d %d %d %d", val.r, val.g, val.b, val.a);
-    }
+    char buf[512];
+    StoreComment(sec, key, comment);
+    sprintf_s(buf, "%d %d %d %d", val.r, val.g, val.b, val.a);
     WritePrivateProfileStringA(sec, key, buf, path.c_str());
 }
 
 void ConfigHelper::WriteString(const char* sec, const char* key, const std::string& val, const char* comment) {
-    char buf[512];
-    if (comment && comment[0] != '\0') {
-        sprintf_s(buf, "%s #%s", val.c_str(), comment);
-    } else {
-        sprintf_s(buf, "%s", val.c_str());
-    }
-    WritePrivateProfileStringA(sec, key, buf, path.c_str());
+    StoreComment(sec, key, comment);
+    WritePrivateProfileStringA(sec, key, val.c_str(), path.c_str());
 }
 
 int ConfigHelper::ReadIntArray(const char* sec, const char* key, int16_t* out, int count, const int16_t* def) {
     char buf[4096];
+    int parsed;
+    char *ctx, *tok;
+
     if (GetPrivateProfileStringA(sec, key, "", buf, sizeof(buf), path.c_str()) > 0) {
-        int parsed = 0;
-        char* ctx = nullptr;
-        char* tok = strtok_s(buf, ", \t", &ctx);
+        parsed = 0;
+        ctx = nullptr;
+        tok = strtok_s(buf, ", \t", &ctx);
         while (tok && parsed < count) {
             out[parsed++] = (int16_t)atoi(tok);
             tok = strtok_s(nullptr, ", \t", &ctx);
@@ -156,24 +161,27 @@ void ConfigHelper::WriteIntArray(const char* sec, const char* key, const int16_t
     char num[16];
     std::string s;
 
+    StoreComment(sec, key, comment);
     for (i = 0; i < count; i++) {
         if (i > 0) s += ", ";
         sprintf_s(num, "%d", arr[i]);
         s += num;
     }
-    if (comment && comment[0] != '\0') {
-        s += " #";
-        s += comment;
-    }
     WritePrivateProfileStringA(sec, key, s.c_str(), path.c_str());
 }
 
 void ConfigHelper::Format(const std::string& headerComments) {
-    FILE* f = nullptr;
+    FILE* f;
+    bool firstSection;
+    char line[512];
+    size_t eqPos, end;
+    std::string content, l, currentSection, mapKey, keyName;
+    std::map<std::string, std::string>::iterator it;
+
+    f = nullptr;
     fopen_s(&f, path.c_str(), "r");
     if (!f) return;
     
-    std::string content;
     if (!headerComments.empty()) {
         content += headerComments;
         if (headerComments.back() != '\n') {
@@ -181,10 +189,9 @@ void ConfigHelper::Format(const std::string& headerComments) {
         }
     }
     
-    char line[512];
-    bool firstSection = true;
+    firstSection = true;
     while (fgets(line, sizeof(line), f)) {
-        std::string l = line;
+        l = line;
         if (l[0] == ';' || l[0] == '#') {
             continue;
         }
@@ -193,11 +200,32 @@ void ConfigHelper::Format(const std::string& headerComments) {
                 content += "\n";
             }
             firstSection = false;
+            // Extract section name
+            end = l.find(']');
+            if (end != std::string::npos) {
+                currentSection = l.substr(1, end - 1);
+            }
+            content += l;
+            continue;
+        }
+        // For key=value lines, look up the comment in the map
+        eqPos = l.find('=');
+        if (eqPos != std::string::npos && !currentSection.empty()) {
+            keyName = l.substr(0, eqPos);
+            while (!keyName.empty() && isspace((unsigned char)keyName.back())) {
+                keyName.pop_back();
+            }
+            mapKey = currentSection + "|" + keyName;
+            it = comments.find(mapKey);
+            if (it != comments.end() && !it->second.empty()) {
+                content += "; " + it->second + "\n";
+            }
         }
         content += l;
     }
     fclose(f);
     
+    f = nullptr;
     fopen_s(&f, path.c_str(), "w");
     if (f) {
         fputs(content.c_str(), f);

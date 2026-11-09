@@ -2,6 +2,7 @@
 #include "..\includes\RadioConfig.h"
 #include "..\includes\InputHandler.h"
 #include "..\includes\SomeMacros.h"
+#include "..\includes\DirectImageRasterizer.h"
 #include "extensions/Screen.h"
 #include <cmath>
 #include "CFileLoader.h"
@@ -18,11 +19,15 @@
 #define RADIO_MANAGER gMusicManager
 #define MUSIC_VOLUME_PREF CMenuManager::m_nPrefsMusicVolume
 #define ACTIVE_STATIONS 12
+#define RADIO_ICON_COUNT 22
+#define RADIO_ICON_NAMES Radio::radioIconNamesIII
 #elif defined(GTAVC)
 #include "cDMAudio.h"
 #define RADIO_MANAGER DMAudio
 #define MUSIC_VOLUME_PREF FrontEndMenuManager.m_nPrefsMusicVolume
 #define ACTIVE_STATIONS 12
+#define RADIO_ICON_COUNT 24
+#define RADIO_ICON_NAMES Radio::radioIconNamesVC
 #else
 #include "CAudioEngine.h"
 #include "CAERadioTrackManager.h"
@@ -30,6 +35,8 @@
 #define RADIO_MANAGER AudioEngine
 #define MUSIC_VOLUME_PREF FrontEndMenuManager.m_nPrefsMusicVolume
 #define ACTIVE_STATIONS 13
+#define RADIO_ICON_COUNT 26
+#define RADIO_ICON_NAMES Radio::radioIconNamesSA
 #endif
 
 using namespace plugin;
@@ -228,23 +235,21 @@ static void DrawIcon(int index, float x, float y, float alpha, float relPos, con
 }
 
 void Radio::InitRadio() {
+    char folderPath[MAX_PATH];
     int i;
-#ifdef GTA3
-    radioTexDict = CFileLoader::LoadTexDictionary(GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\radio_iii.txd"));
-    for (i = 0; i < 22; ++i) {
-        radioIcons[i].m_pTexture = RwTexDictionaryFindNamedTexture(radioTexDict, radioIconNamesIII[i]);
+    RwTexture *tex;
+
+    DirectImageRasterizer::EnsureLoaded();
+
+    strcpy_s(folderPath, sizeof(folderPath), GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\icons"));
+
+    for (i = 0; i < RADIO_ICON_COUNT; ++i) {
+        tex = DirectImageRasterizer::FindPNGinFolderPath(folderPath, RADIO_ICON_NAMES[i], 0, 0, true);
+        if (tex) {
+            RwTextureSetFilterMode(tex, rwFILTERLINEARMIPLINEAR);
+        }
+        radioIcons[i].m_pTexture = tex;
     }
-#elif defined(GTAVC)
-    radioTexDict = CFileLoader::LoadTexDictionary(GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\radio_vc.txd"));
-    for (i = 0; i < 24; ++i) {
-        radioIcons[i].m_pTexture = RwTexDictionaryFindNamedTexture(radioTexDict, radioIconNamesVC[i]);
-    }
-#else
-    radioTexDict = CFileLoader::LoadTexDictionary(GAME_PATH("charlesvercetti_mods\\ScrollingRadio\\radio_sa.txd"));
-    for (i = 0; i < 26; ++i) {
-        radioIcons[i].m_pTexture = RwTexDictionaryFindNamedTexture(radioTexDict, radioIconNamesSA[i]);
-    }
-#endif
 }
 
 void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
@@ -516,20 +521,11 @@ void __fastcall Radio::DrawRadioIcons(void* self, int edx) {
 
 void Radio::ShutdownRadio() {
     int i;
-    if (radioTexDict) {
-#ifdef GTA3
-        for (i = 0; i < 22; ++i) {
+
+    for (i = 0; i < RADIO_ICON_COUNT; ++i) {
+        if (radioIcons[i].m_pTexture) {
+            RwTextureDestroy(radioIcons[i].m_pTexture);
             radioIcons[i].m_pTexture = nullptr;
         }
-#elif defined(GTAVC)
-        for (i = 0; i < 24; ++i) {
-            radioIcons[i].m_pTexture = nullptr;
-        }
-#else
-        for (i = 0; i < 26; ++i) {
-            radioIcons[i].m_pTexture = nullptr;
-        }
-#endif
-        radioTexDict = nullptr;
     }
 }

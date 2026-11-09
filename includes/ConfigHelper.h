@@ -2,10 +2,13 @@
 #include <plugin.h>
 #include <string>
 #include <vector>
+#include <map>
 #include <cstdint>
 
 class ConfigHelper {
     std::string path;
+    std::map<std::string, std::string> comments; // "section|key" -> comment
+    void StoreComment(const char* sec, const char* key, const char* comment);
 public:
     ConfigHelper(const std::string& iniPath);
 
